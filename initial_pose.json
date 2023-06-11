@@ -1,0 +1,25 @@
+{
+  "imageSize": [512, 512],
+  "image_1.jpg": {
+    "pose1": {
+      "nose": [250, 80],
+      "neck": [250, 130],
+      "right_shoulder": [230, 130],
+      "right_elbow": [210, 170],
+      "right_wrist": [190, 190],
+      "left_shoulder": [270, 130],
+      "left_elbow": [290, 170],
+      "left_wrist": [310, 190],
+      "right_hip": [230, 220],
+      "right_knee": [210, 280],
+      "right_ankle": [190, 320],
+      "left_hip": [270, 220],
+      "left_knee": [290, 280],
+      "left_ankle": [310, 320],
+      "right_eye": [240, 60],
+      "left_eye": [260, 60],
+      "right_ear": [220, 70],
+      "left_ear": [280, 70]
+    }
+  }
+}
