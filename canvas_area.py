@@ -28,15 +28,33 @@ class CanvasArea(tk.Canvas):
         self.load_pose()
         self.draw_skeleton()
 
-    def load_pose(self, pose_data_path=os.path.join(config.HOME_PATH, "initial_pose.json")):
+    def get_pose_data_path(self, saving_path=False):
+        path = os.path.join(config.WORKING_FOLDER_PATH, "pose_data.json")
+        if saving_path or os.path.isfile(path): return path
+        return os.path.join(config.HOME_PATH, "initial_pose.json")
+    
+    def get_image_file_path(self, file_name):
+        return os.path.join(config.WORKING_FOLDER_PATH, file_name)
+
+    def get_generated_images_path(self):
+        return os.path.join(config.WORKING_FOLDER_PATH, "generated_images")
+
+    def get_pose_data(self):
         try:
-            with open(pose_data_path) as file:
-                self.pose_data = json.load(file)
+            path = self.get_pose_data_path()
+            with open(path) as file:
+                return json.load(file)
         except FileNotFoundError:
-            raise Exception("initial_pose.json doesn't exist in the root of this app.\nConsider reinstalling this app.")
+            raise Exception("{} doesn't exist in the folder.".format(path))
         except json.JSONDecodeError:
             # Handle the case when the pose data file is not a valid JSON file
             raise Exception("Invalid JSON file. Please check the file.")
+
+    def load_pose(self):
+        try:
+            self.pose_data = self.get_pose_data()
+        except:
+            raise
         else:
             config.set_image_name_list()
             if len(config.IMAGE_NAME_LIST) >= 1 and "image_1.jpg" in self.pose_data:
@@ -91,7 +109,7 @@ class CanvasArea(tk.Canvas):
         self.delete("image")
         
         # Load image and put it on the canvas if it exists
-        image_file_path = config.get_image_file_path(config.IMAGE_NAME_NOW)
+        image_file_path = self.get_image_file_path(config.IMAGE_NAME_NOW)
         if os.path.isfile(image_file_path) and set_image and self.background_mode == "Original Image":
             resized_image = self.open_resized_image(image_file_path)
             self.image = ImageTk.PhotoImage(resized_image)
@@ -104,13 +122,13 @@ class CanvasArea(tk.Canvas):
         self.draw_skeleton()
 
     def save_as_image(self):
-        generated_images_dir = config.get_generated_images_path()
+        generated_images_dir = self.get_generated_images_path()
         os.makedirs(generated_images_dir, exist_ok=True)
         generated_image_path = os.path.join(generated_images_dir, config.IMAGE_NAME_NOW)
         file_mode = "RGB" if config.check_image_extension(config.IMAGE_NAME_NOW, ".jpg") else "P"
         saving_image = Image.new(file_mode, (self.width, self.height), "black")
         # When you need pose drawn images
-        # original_image = self.open_resized_image(config.get_image_file_path(config.IMAGE_NAME_NOW))
+        # original_image = self.open_resized_image(self.get_image_file_path(config.IMAGE_NAME_NOW))
         # saving_image.paste(original_image)
         self.saving_canvas = ImageDraw.Draw(saving_image)
         self.draw_skeleton()
@@ -118,20 +136,14 @@ class CanvasArea(tk.Canvas):
         
     def save_pose_data(self):
         try:
-            with open(config.get_pose_data_path(), "w") as file:
+            with open(self.get_pose_data_path(saving_path=True), "w") as file:
                 json.dump(self.pose_data, file, indent=4)
         except:
             raise
 
     def is_pose_data_saved(self):
-        pose_data_path = config.get_pose_data_path()
-        if os.path.isfile(pose_data_path):
-            with open(config.get_pose_data_path(), "r") as file:
-                saved_data = json.load(file)
-                return saved_data == self.pose_data
-        else:
-            return False
-        
+        saved_or_initial_data = self.get_pose_data()
+        return saved_or_initial_data == self.pose_data
 
     def on_canvas_move(self, event):
         hovered_on = False

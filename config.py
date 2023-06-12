@@ -32,15 +32,6 @@ IMAGE_NAME_NOW = "image_1.jpg"
 POSE_ID_NOW = "pose1"
 
 # Common functions
-def get_pose_data_path():
-    return os.path.join(WORKING_FOLDER_PATH, "pose_data.json")
-
-def get_image_file_path(file_name):
-    return os.path.join(WORKING_FOLDER_PATH, file_name)
-
-def get_generated_images_path():
-    return os.path.join(WORKING_FOLDER_PATH, "generated_images")
-
 def check_image_extension(file_name, extension):
     if extension.lower() in [".jpg", ".jpeg"]:
         return file_name.lower().endswith((".jpg", ".jpeg"))

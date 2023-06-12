@@ -10,7 +10,7 @@ import config
 class MainPage(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Pose Annotation App")
+        self.title("subdrawer4AI")
         self.geometry("900x900")
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
@@ -143,20 +143,15 @@ class MainPage(tk.Tk):
         self.force_select_in_image_list(index_now)
     
     def load_from_folder(self):
-        current_working_folder_path = config.WORKING_FOLDER_PATH
+        path_to_recover = config.WORKING_FOLDER_PATH
         config.WORKING_FOLDER_PATH = filedialog.askdirectory()
         if config.WORKING_FOLDER_PATH == "": # When cancelled
-            config.WORKING_FOLDER_PATH = current_working_folder_path
+            config.WORKING_FOLDER_PATH = path_to_recover
             return
         self.folder_label["text"] = config.WORKING_FOLDER_PATH
 
-        # Load pose data from JSON file if it exists. If not, just pass.
-        pose_data_path = config.get_pose_data_path()
         try:
-            if os.path.isfile(pose_data_path):
-                self.canvas_area.load_pose(pose_data_path)
-            else:
-                self.canvas_area.load_pose()
+            self.canvas_area.load_pose()
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while loading pose data:\n{str(e)}")
 
