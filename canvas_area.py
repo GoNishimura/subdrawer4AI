@@ -33,11 +33,17 @@ class CanvasArea(tk.Canvas):
         if saving_path or os.path.isfile(path): return path
         return os.path.join(config.HOME_PATH, "initial_pose.json")
     
-    def get_image_file_path(self, file_name):
-        return os.path.join(config.WORKING_FOLDER_PATH, file_name)
-
     def get_generated_images_path(self):
         return os.path.join(config.WORKING_FOLDER_PATH, "generated_images")
+    
+    def get_resized_image(self, file_name):
+        path = os.path.join(config.WORKING_FOLDER_PATH, file_name)
+        if os.path.isfile(path):
+            with Image.open(path) as loaded:
+                resize_ratio = lambda x: x * self.height // loaded.height
+                return loaded.resize((resize_ratio(loaded.width), resize_ratio(loaded.height)))
+        else:
+            return None
 
     def get_pose_data(self):
         try:
@@ -99,19 +105,13 @@ class CanvasArea(tk.Canvas):
             self.create_text(coordinates[0], coordinates[1] - self.text_size, text=keypoint.replace("_", " "), 
                              tags="names", font=("", self.text_size),
                              fill=self.rgb_to_hex(config.KEYPOINT_COLOR[index]))
-            
-    def open_resized_image(self, image_file_path):
-        with Image.open(image_file_path) as loaded:
-            resize_ratio = lambda x: x * self.height // loaded.height
-            return loaded.resize((resize_ratio(loaded.width), resize_ratio(loaded.height)))
 
     def set_image_and_pose_now(self, set_image=True):
         self.delete("image")
         
         # Load image and put it on the canvas if it exists
-        image_file_path = self.get_image_file_path(config.IMAGE_NAME_NOW)
-        if os.path.isfile(image_file_path) and set_image and self.background_mode == "Original Image":
-            resized_image = self.open_resized_image(image_file_path)
+        resized_image = self.get_resized_image(config.IMAGE_NAME_NOW)
+        if resized_image is not None and set_image and self.background_mode == "Original Image":
             self.image = ImageTk.PhotoImage(resized_image)
             self.create_image(2, 2, image=self.image, anchor=tk.NW, tags="image") # Need that 2 for showing properly.
         
@@ -128,7 +128,7 @@ class CanvasArea(tk.Canvas):
         file_mode = "RGB" if config.check_image_extension(config.IMAGE_NAME_NOW, ".jpg") else "P"
         saving_image = Image.new(file_mode, (self.width, self.height), "black")
         # When you need pose drawn images
-        # original_image = self.open_resized_image(self.get_image_file_path(config.IMAGE_NAME_NOW))
+        # original_image = self.get_resized_image(config.IMAGE_NAME_NOW)
         # saving_image.paste(original_image)
         self.saving_canvas = ImageDraw.Draw(saving_image)
         self.draw_skeleton()
