@@ -1,5 +1,5 @@
 {
-  "imageSize": [512, 512],
+  "image_size": [512, 512],
   "image_1.jpg": {
     "pose1": {
       "nose": [250, 80],
