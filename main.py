@@ -20,7 +20,7 @@ class MainPage(tk.Tk):
         # Frame for keypoint buttons
         self.keypoint_buttons_frame = tk.LabelFrame(self, text="Add / Remove Keypoints")
         self.keypoint_buttons_frame.grid(row=0, column=2, padx=10, pady=10, sticky="n")
-        # Add keypoint buttons
+        # # Add keypoint buttons
         for index, keypoint in enumerate(config.KEYPOINTS_LIST):
             button = tk.Button(
                 self.keypoint_buttons_frame,
@@ -48,7 +48,7 @@ class MainPage(tk.Tk):
         self.load_save_frame = tk.Frame(self)
         self.load_save_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
 
-        # Frame for load options
+        # # Frame for load options
         self.load_frame = tk.Frame(self.load_save_frame)
         self.load_frame.grid(row=0, column=0, columnspan=2, sticky="w")
 
@@ -62,7 +62,7 @@ class MainPage(tk.Tk):
         self.folder_label = tk.Label(self.load_frame, text=config.WORKING_FOLDER_PATH)
         self.folder_label.pack(side="left", padx=5)
 
-        # Frame for save options
+        # # Frame for save options
         self.save_frame = tk.Frame(self.load_save_frame)
         self.save_frame.grid(row=1, column=0, columnspan=2, sticky="w")
         self.save_images_poses_button = tk.Button(self.save_frame, text="Save Images & Poses",
@@ -79,7 +79,7 @@ class MainPage(tk.Tk):
         self.key_instructions = tk.Label(self.image_listbox_frame, text="'a': prev / 's': next")
         self.key_instructions.grid(row=0, column=0)
 
-        # Frame for listbox
+        # # Frame for listbox
         self.listbox_frame = tk.Frame(self.image_listbox_frame)
         self.listbox_frame.grid(row=1, column=0, sticky="nsew")
 
@@ -92,6 +92,19 @@ class MainPage(tk.Tk):
         self.scrollbar.pack(side="right", fill="y")
         self.scrollbar.config(command=self.image_listbox.yview)
         self.image_listbox.config(yscrollcommand=self.scrollbar.set)
+
+        # Frame for sliders
+        self.sliders_frame = tk.Frame(self)
+        self.sliders_frame.grid(row=3, column=0, padx=10, pady=10, sticky="nsew")
+        self.width_slider = ttk.Scale(self.sliders_frame, from_=1, to=self.winfo_screenwidth(), orient="horizontal", length=300,
+                                      label="Canvas Width", command=self.update_canvas_size)
+        self.height_slider = ttk.Scale(self.sliders_frame, from_=1, to=self.winfo_screenheight(), orient="horizontal", length=300,
+                                       label="Canvas Height", command=self.update_canvas_size)
+        self.width_slider.set(self.canvas_area.width)
+        self.height_slider.set(self.canvas_area.height)
+        self.width_slider.grid(row=0, column=0, sticky="w")
+        self.height_slider.grid(row=1, column=1, sticky="w")
+
             
         self.bind("<Button-1>", self.on_click)
         self.bind("<KeyPress-s>", self.on_image_select)
@@ -174,6 +187,11 @@ class MainPage(tk.Tk):
             self.saved_message["text"] = "Images and poses saved successfully!"
             config.IMAGE_NAME_NOW = current_image
             self.canvas_area.set_image_and_pose_now()
+
+    def update_canvas_size(self, _):
+        new_width = self.width_slider.get()
+        new_height = self.height_slider.get()
+        self.canvas_area.resize_canvas(new_width, new_height)
 
     def on_closing(self):
         already_saved = self.canvas_area.is_pose_data_saved()

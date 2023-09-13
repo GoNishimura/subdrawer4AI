@@ -175,3 +175,10 @@ class CanvasArea(tk.Canvas):
         else:
             pose_keypoints[keypoint] = [self.width, 0]
         self.draw_skeleton()
+
+    def resize_canvas(self, width, height):
+        self.width = width
+        self.height = height
+        self.configure(width=self.width, height=self.height)
+
+        # TODO: Redraw the skeleton and image based on the new canvas size
