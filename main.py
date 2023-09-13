@@ -13,6 +13,7 @@ class MainPage(tk.Tk):
         self.title("subdrawer4AI")
         self.geometry("900x900")
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.resizable(True, True)
         
         self.canvas_area = CanvasArea(self)
         self.canvas_area.grid(row=0, column=0, columnspan=2, padx=0, pady=0, sticky=tk.NW)
@@ -96,21 +97,29 @@ class MainPage(tk.Tk):
         # Frame for sliders
         self.sliders_frame = tk.Frame(self)
         self.sliders_frame.grid(row=3, column=0, padx=10, pady=10, sticky="nsew")
-        self.width_slider = ttk.Scale(self.sliders_frame, from_=1, to=self.winfo_screenwidth(), orient="horizontal", length=300,
-                                      label="Canvas Width", command=self.update_canvas_size)
-        self.height_slider = ttk.Scale(self.sliders_frame, from_=1, to=self.winfo_screenheight(), orient="horizontal", length=300,
-                                       label="Canvas Height", command=self.update_canvas_size)
+        
+        # # width slider
+        self.width_slider = tk.Scale(self.sliders_frame, from_=1, to=self.winfo_screenwidth(), 
+                                      orient="horizontal", length=150, 
+                                      label="Image Width:",
+                                      command=self.update_canvas_size)
         self.width_slider.set(self.canvas_area.width)
+        self.width_slider.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        
+        # # height slider
+        self.height_slider = tk.Scale(self.sliders_frame, from_=1, to=self.winfo_screenheight(), 
+                                       orient="horizontal", length=150, 
+                                       label="Image Height:",
+                                       command=self.update_canvas_size)
         self.height_slider.set(self.canvas_area.height)
-        self.width_slider.grid(row=0, column=0, sticky="w")
-        self.height_slider.grid(row=1, column=1, sticky="w")
+        self.height_slider.grid(row=0, column=1, padx=5, pady=5, sticky="w")
 
-            
+        # Bind events here after sliders are initialized
         self.bind("<Button-1>", self.on_click)
         self.bind("<KeyPress-s>", self.on_image_select)
         self.bind("<KeyPress-a>", self.on_image_select)
-        self.populate_image_listbox()
 
+        self.populate_image_listbox()
 
     def on_click(self, event):
         self.saved_message["text"] = ""
@@ -189,9 +198,12 @@ class MainPage(tk.Tk):
             self.canvas_area.set_image_and_pose_now()
 
     def update_canvas_size(self, _):
-        new_width = self.width_slider.get()
-        new_height = self.height_slider.get()
-        self.canvas_area.resize_canvas(new_width, new_height)
+        new_width = self.width_slider.get() if hasattr(self, "width_slider") else self.canvas_area.width
+        new_height = self.height_slider.get() if hasattr(self, "height_slider") else self.canvas_area.height
+        if (
+            new_width != self.canvas_area.width or 
+            new_height != self.canvas_area.height):
+            self.canvas_area.resize_canvas(new_width, new_height)
 
     def on_closing(self):
         already_saved = self.canvas_area.is_pose_data_saved()

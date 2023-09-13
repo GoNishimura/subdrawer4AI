@@ -113,7 +113,9 @@ class CanvasArea(tk.Canvas):
         resized_image = self.get_resized_image(config.IMAGE_NAME_NOW)
         if resized_image is not None and set_image and self.background_mode == "Original Image":
             self.image = ImageTk.PhotoImage(resized_image)
-            self.create_image(2, 2, image=self.image, anchor=tk.NW, tags="image") # Need that 2 for showing properly.
+            # Need this 2 for showing properly.
+            self.create_image(2, 2, image=self.image, anchor=tk.NW, tags="image")
+            self.resize_canvas(resized_image.width, resized_image.height)
         
         # Make a new pose data for the image if it doesn't exist
         if config.IMAGE_NAME_NOW not in self.pose_data:
@@ -177,8 +179,15 @@ class CanvasArea(tk.Canvas):
         self.draw_skeleton()
 
     def resize_canvas(self, width, height):
+        width_change_rate = width / self.width
+        height_change_rate = height / self.height
         self.width = width
         self.height = height
         self.configure(width=self.width, height=self.height)
+        self.master.width_slider.set(self.width)
+        self.master.height_slider.set(self.height)
 
         # TODO: Redraw the skeleton and image based on the new canvas size
+        # print("w/h change rate", width_change_rate, height_change_rate)
+        # self.create_image()をすればキャンバスの画像を更新できる
+        # set_image_and_pose_now()で比率計算をいじれば大丈夫
