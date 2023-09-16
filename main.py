@@ -2,7 +2,6 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.filedialog as filedialog
 from tkinter import messagebox
-import os
 from canvas_area import CanvasArea
 import config
 
@@ -14,7 +13,37 @@ class MainPage(tk.Tk):
         self.geometry("900x900")
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.resizable(True, True)
+        label_and_funcs = {
+            "load from folder": {
+                "label": "Load From Folder", "func": self.load_from_folder
+            },
+            "save": {
+                "label": "Save Images & Poses", "func": self.save_images_poses
+            }
+        }
+
+        # Menu -------------------
+        menubar = tk.Menu(self)
+
+        # # Files
+        menu_file = tk.Menu(menubar, tearoff=False)
+        menu_file.add_command(label=label_and_funcs["load from folder"]["label"], 
+                              command=label_and_funcs["load from folder"]["func"])
+        menu_file.add_command(label=label_and_funcs["save"]["label"], 
+                              command=label_and_funcs["save"]["func"])
         
+        # # Edit
+        menu_edit = tk.Menu(menubar, tearoff=False)
+        menu_edit.add_command(label="Reset image size", 
+                              command=self.reset_image_size)
+        
+        # # setup
+        menubar.add_cascade(label="File", menu=menu_file)
+        menubar.add_cascade(label="Edit", menu=menu_edit)
+        self.config(menu=menubar)
+
+        # Widgets -------------------
+        # Canvas Area
         self.canvas_area = CanvasArea(self)
         self.canvas_area.grid(row=0, column=0, columnspan=2, padx=0, pady=0, sticky=tk.NW)
         
@@ -53,8 +82,9 @@ class MainPage(tk.Tk):
         self.load_frame = tk.Frame(self.load_save_frame)
         self.load_frame.grid(row=0, column=0, columnspan=2, sticky="w")
 
-        self.load_from_folder_button = tk.Button(self.load_frame, text="Load From Folder", 
-                                                 command=self.load_from_folder)
+        self.load_from_folder_button = tk.Button(self.load_frame, 
+            text=label_and_funcs["load from folder"]["label"], 
+            command=label_and_funcs["load from folder"]["func"])
         self.load_from_folder_button.pack(side="left", padx=5)
 
         self.fixed_label = tk.Label(self.load_frame, text="Selected Folder: ")
@@ -66,8 +96,9 @@ class MainPage(tk.Tk):
         # # Frame for save options
         self.save_frame = tk.Frame(self.load_save_frame)
         self.save_frame.grid(row=1, column=0, columnspan=2, sticky="w")
-        self.save_images_poses_button = tk.Button(self.save_frame, text="Save Images & Poses",
-                                                  command=self.save_images_poses)
+        self.save_images_poses_button = tk.Button(self.save_frame, 
+            text=label_and_funcs["save"]["label"], 
+            command=label_and_funcs["save"]["func"])
         self.save_images_poses_button.pack(side="left", padx=5)
 
         self.saved_message = tk.Label(self.save_frame, text="")
@@ -192,10 +223,16 @@ class MainPage(tk.Tk):
     def update_canvas_size(self, _):
         new_width = self.width_slider.get() if hasattr(self, "width_slider") else self.canvas_area.width
         if new_width != self.canvas_area.width:
-            self.canvas_area.resize_canvas(
+            self.resize_canvas_image(
                 new_width, 
                 self.canvas_area.height * new_width // self.canvas_area.width)
-            self.canvas_area.set_image_and_pose_now()
+
+    def resize_canvas_image(self, width, height):
+        self.canvas_area.resize_canvas(width, height)
+        self.canvas_area.set_image_and_pose_now()
+
+    def reset_image_size(self):
+        self.resize_canvas_image(config.INIT_IMAGE_SIZE[0], config.INIT_IMAGE_SIZE[1])
 
     def on_closing(self):
         already_saved = self.canvas_area.is_pose_data_saved()

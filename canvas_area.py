@@ -10,8 +10,8 @@ import config
 class CanvasArea(tk.Canvas):
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
-        self.width = 512
-        self.height = 512
+        self.width = config.INIT_IMAGE_SIZE[0]
+        self.height = config.INIT_IMAGE_SIZE[1]
         self.configure(width=self.width, height=self.height, bg="black")
         self.image_2_show = None
         self.hovered_keypoint = None

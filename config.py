@@ -30,6 +30,7 @@ WORKING_FOLDER_PATH = os.path.realpath("./")
 IMAGE_NAME_LIST = []
 IMAGE_NAME_NOW = "image_1.jpg"
 POSE_ID_NOW = "pose1"
+INIT_IMAGE_SIZE = [512, 512]
 
 # Common functions
 def check_image_extension(file_name, extension):
