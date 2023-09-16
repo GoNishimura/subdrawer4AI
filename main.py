@@ -195,10 +195,7 @@ class MainPage(tk.Tk):
             self.canvas_area.resize_canvas(
                 new_width, 
                 self.canvas_area.height * new_width // self.canvas_area.width)
-            # self.canvas_area.set_image_and_pose_now(
-            #     True, 
-            #     new_width, 
-            #     self.canvas_area.height * new_width // self.canvas_area.width)
+            self.canvas_area.set_image_and_pose_now()
 
     def on_closing(self):
         already_saved = self.canvas_area.is_pose_data_saved()

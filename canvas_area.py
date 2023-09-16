@@ -115,7 +115,7 @@ class CanvasArea(tk.Canvas):
                 coordinates[0] * width_rate, coordinates[1] * height_rate
             ]
     
-    def set_image_and_pose_now(self, set_image=True, resize_canvas=True):
+    def set_image_and_pose_now(self, set_image=True):
         self.delete("image")
         
         # Load image and put it on the canvas if it exists
@@ -123,11 +123,9 @@ class CanvasArea(tk.Canvas):
         if resized_image is not None and set_image and self.background_mode == "Original Image":
             self.image_2_show = ImageTk.PhotoImage(resized_image)
             # Need this 2 for showing properly.
-            print('resized image:', resized_image.width, resized_image.height, 'in', self.width, self.height)
             self.create_image(2, 2, 
                               image=self.image_2_show, anchor=tk.NW, tags="image")
-            if resize_canvas: 
-                self.resize_canvas(resized_image.width, resized_image.height)
+            self.resize_canvas(resized_image.width, resized_image.height)
         
         # Make a new pose data for the image if it doesn't exist
         if config.IMAGE_NAME_NOW not in self.pose_data:
@@ -195,7 +193,5 @@ class CanvasArea(tk.Canvas):
         self.resize_skeleton(width / self.width, height / self.height)
         self.width = width
         self.height = height
-        print('resize to', width, height)
         self.configure(width=self.width, height=self.height)
         self.master.width_slider.set(self.width)
-        self.set_image_and_pose_now(True, False)
