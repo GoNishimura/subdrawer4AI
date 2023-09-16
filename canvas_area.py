@@ -13,7 +13,7 @@ class CanvasArea(tk.Canvas):
         self.width = 512
         self.height = 512
         self.configure(width=self.width, height=self.height, bg="black")
-        self.image = None
+        self.image_2_show = None
         self.hovered_keypoint = None
         self.saving_canvas = None
         self.pose_data = {}
@@ -40,8 +40,8 @@ class CanvasArea(tk.Canvas):
         path = os.path.join(config.WORKING_FOLDER_PATH, file_name)
         if os.path.isfile(path):
             with Image.open(path) as loaded:
-                resize_ratio = lambda x: x * self.height // loaded.height
-                return loaded.resize((resize_ratio(loaded.width), resize_ratio(loaded.height)))
+                new_width = loaded.width * self.height // loaded.height
+                if new_width >= 1: return loaded.resize((new_width, self.height))
         else:
             return None
 
@@ -67,6 +67,9 @@ class CanvasArea(tk.Canvas):
                 keypoints = self.pose_data.pop("image_1.jpg")
                 self.pose_data[config.IMAGE_NAME_LIST[0]] = keypoints
 
+    def get_keypoints(self):
+        return self.pose_data[config.IMAGE_NAME_NOW][config.POSE_ID_NOW]
+
     def rgb_to_hex(self, arr):
         return '#{:02x}{:02x}{:02x}'.format(arr[0], arr[1], arr[2])
 
@@ -76,7 +79,7 @@ class CanvasArea(tk.Canvas):
         if saving_canvas_exists:
             self.saving_canvas.rectangle((0, 0, self.width, self.height), fill="black")
 
-        keypoints = self.pose_data[config.IMAGE_NAME_NOW][config.POSE_ID_NOW]
+        keypoints = self.get_keypoints()
         # Draw lines
         for index, (start, end) in enumerate(config.CONNECTIONS_LIST):
             if start in keypoints and end in keypoints:
@@ -101,25 +104,35 @@ class CanvasArea(tk.Canvas):
     def draw_keypoint_names(self, just_delete=False):
         self.delete("names")
         if just_delete: return
-        for index, (keypoint, coordinates) in enumerate(self.pose_data[config.IMAGE_NAME_NOW][config.POSE_ID_NOW].items()):
+        for index, (keypoint, coordinates) in enumerate(self.get_keypoints().items()):
             self.create_text(coordinates[0], coordinates[1] - self.text_size, text=keypoint.replace("_", " "), 
                              tags="names", font=("", self.text_size),
                              fill=self.rgb_to_hex(config.KEYPOINT_COLOR[index]))
 
-    def set_image_and_pose_now(self, set_image=True):
+    def resize_skeleton(self, width_rate, height_rate):
+        for keypoint, coordinates in self.get_keypoints().items():
+            self.pose_data[config.IMAGE_NAME_NOW][config.POSE_ID_NOW][keypoint] = [
+                coordinates[0] * width_rate, coordinates[1] * height_rate
+            ]
+    
+    def set_image_and_pose_now(self, set_image=True, resize_canvas=True):
         self.delete("image")
         
         # Load image and put it on the canvas if it exists
         resized_image = self.get_resized_image(config.IMAGE_NAME_NOW)
         if resized_image is not None and set_image and self.background_mode == "Original Image":
-            self.image = ImageTk.PhotoImage(resized_image)
+            self.image_2_show = ImageTk.PhotoImage(resized_image)
             # Need this 2 for showing properly.
-            self.create_image(2, 2, image=self.image, anchor=tk.NW, tags="image")
-            self.resize_canvas(resized_image.width, resized_image.height)
+            print('resized image:', resized_image.width, resized_image.height, 'in', self.width, self.height)
+            self.create_image(2, 2, 
+                              image=self.image_2_show, anchor=tk.NW, tags="image")
+            if resize_canvas: 
+                self.resize_canvas(resized_image.width, resized_image.height)
         
         # Make a new pose data for the image if it doesn't exist
         if config.IMAGE_NAME_NOW not in self.pose_data:
-            self.pose_data[config.IMAGE_NAME_NOW] = copy.deepcopy(list(self.pose_data.values())[-1])
+            self.pose_data[config.IMAGE_NAME_NOW] = copy.deepcopy(
+                list(self.pose_data.values())[-1])
     
         self.draw_skeleton()
 
@@ -149,7 +162,7 @@ class CanvasArea(tk.Canvas):
 
     def on_canvas_move(self, event):
         hovered_on = False
-        for keypoint, coordinates in self.pose_data[config.IMAGE_NAME_NOW][config.POSE_ID_NOW].items():
+        for keypoint, coordinates in self.get_keypoints().items():
             if math.sqrt(
                 (event.x - coordinates[0]) ** 2 + (event.y - coordinates[1]) ** 2) <= self.keypoint_area_radius:
                 self.hovered_keypoint = keypoint
@@ -162,7 +175,7 @@ class CanvasArea(tk.Canvas):
 
     def on_canvas_drag(self, event):
         if self.hovered_keypoint:
-            self.pose_data[config.IMAGE_NAME_NOW][config.POSE_ID_NOW][self.hovered_keypoint] = [event.x, event.y]
+            self.get_keypoints()[self.hovered_keypoint] = [event.x, event.y]
             self.draw_skeleton()
             self.draw_keypoint_names()
 
@@ -171,7 +184,7 @@ class CanvasArea(tk.Canvas):
         self.draw_keypoint_names(just_delete=True)
     
     def toggle_keypoint(self, keypoint):
-        pose_keypoints = self.pose_data[config.IMAGE_NAME_NOW][config.POSE_ID_NOW]
+        pose_keypoints = self.get_keypoints()
         if keypoint in pose_keypoints:
             del pose_keypoints[keypoint]
         else:
@@ -179,15 +192,10 @@ class CanvasArea(tk.Canvas):
         self.draw_skeleton()
 
     def resize_canvas(self, width, height):
-        width_change_rate = width / self.width
-        height_change_rate = height / self.height
+        self.resize_skeleton(width / self.width, height / self.height)
         self.width = width
         self.height = height
+        print('resize to', width, height)
         self.configure(width=self.width, height=self.height)
         self.master.width_slider.set(self.width)
-        self.master.height_slider.set(self.height)
-
-        # TODO: Redraw the skeleton and image based on the new canvas size
-        # print("w/h change rate", width_change_rate, height_change_rate)
-        # self.create_image()をすればキャンバスの画像を更新できる
-        # set_image_and_pose_now()で比率計算をいじれば大丈夫
+        self.set_image_and_pose_now(True, False)

@@ -105,14 +105,6 @@ class MainPage(tk.Tk):
                                       command=self.update_canvas_size)
         self.width_slider.set(self.canvas_area.width)
         self.width_slider.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        
-        # # height slider
-        self.height_slider = tk.Scale(self.sliders_frame, from_=1, to=self.winfo_screenheight(), 
-                                       orient="horizontal", length=150, 
-                                       label="Image Height:",
-                                       command=self.update_canvas_size)
-        self.height_slider.set(self.canvas_area.height)
-        self.height_slider.grid(row=0, column=1, padx=5, pady=5, sticky="w")
 
         # Bind events here after sliders are initialized
         self.bind("<Button-1>", self.on_click)
@@ -199,11 +191,14 @@ class MainPage(tk.Tk):
 
     def update_canvas_size(self, _):
         new_width = self.width_slider.get() if hasattr(self, "width_slider") else self.canvas_area.width
-        new_height = self.height_slider.get() if hasattr(self, "height_slider") else self.canvas_area.height
-        if (
-            new_width != self.canvas_area.width or 
-            new_height != self.canvas_area.height):
-            self.canvas_area.resize_canvas(new_width, new_height)
+        if new_width != self.canvas_area.width:
+            self.canvas_area.resize_canvas(
+                new_width, 
+                self.canvas_area.height * new_width // self.canvas_area.width)
+            # self.canvas_area.set_image_and_pose_now(
+            #     True, 
+            #     new_width, 
+            #     self.canvas_area.height * new_width // self.canvas_area.width)
 
     def on_closing(self):
         already_saved = self.canvas_area.is_pose_data_saved()
